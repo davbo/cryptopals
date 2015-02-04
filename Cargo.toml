@@ -1,9 +1,11 @@
 [package]
-
 name = "matasano"
 version = "0.0.1"
 authors = [ "David King <dave@davbo.org>" ]
 
 [lib]
-
 name = "matasano"
+
+
+[dependencies]
+rustc-serialize = "0.2.11"

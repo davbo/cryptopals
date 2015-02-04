@@ -1,13 +1,13 @@
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate collections;
 
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
-use std::io::File;
+use std::old_io::File;
 use std::os;
 
 use self::collections::string::FromUtf8Error;
-use self::serialize::hex::{FromHex, ToHex};
+use self::rustc_serialize::hex::{FromHex, ToHex};
 
 use set1::challenge1::convert_to_base64;
 use set1::challenge2::fixed_xor;
