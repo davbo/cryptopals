@@ -1,7 +1,6 @@
 extern crate core;
 extern crate serialize;
 
-use self::core::iter::Zip;
 use self::serialize::hex::{FromHex, ToHex};
 
 
