@@ -10,7 +10,7 @@ fn challenge4() {
             Ok(candidate) => {
                 let mut results = single_character_xor(candidate.as_slice());
                 if results.len() > 0 {
-                    let (best_score, ref msg) = results.pop().unwrap();
+                    let (best_score, _, ref msg) = results.pop().unwrap();
                     if best_score > 2000 {
                         assert_eq!("Now that the party is jumping\n", msg.as_slice());
                     }

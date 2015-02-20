@@ -5,10 +5,18 @@ use self::serialize::hex::{FromHex, ToHex};
 
 
 pub fn fixed_xor(left: &str, right: &str) -> String {
-    let left_int = left.from_hex().unwrap();
-    let right_int = right.from_hex().unwrap();
+    let left_int = match (left.from_hex()) {
+        Ok(l) => l,
+        Err(_) => vec![]
+    };
+    let right_int = match (right.from_hex()) {
+        Ok(r) => r,
+        Err(_) => vec![]
+    };
 
-    assert_eq!(left_int.len(), right_int.len());
+    if (left_int.len() != right_int.len()) {
+        return String::new();
+    }
 
     let xored_u8: Vec<u8> = left_int.iter().zip(right_int.iter())
         .map(|(l, r)| *l ^ *r)
