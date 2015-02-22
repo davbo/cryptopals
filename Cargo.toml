@@ -8,4 +8,4 @@ name = "matasano"
 
 
 [dependencies]
-rustc-serialize = "0.2.12"
+rustc-serialize = "0.2.15"
