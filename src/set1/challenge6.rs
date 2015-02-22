@@ -24,8 +24,8 @@ pub fn score_keysize(keysize: usize, encrypted_data: &str) -> usize {
     let first_block = str::from_utf8(keysize_iterator.next().unwrap()).unwrap();
     let second_block = str::from_utf8(keysize_iterator.next().unwrap()).unwrap();
     let distance = hamming(&first_block, &second_block);
-    println!("Hamming dist: {}, keysize: {}, score: {}", distance, keysize, distance/keysize);
-    distance/keysize
+    println!("Hamming dist: {}, keysize: {}, score: {}", distance, keysize, (distance*10)/keysize);
+    (distance*10)/keysize
 }
 
 pub fn transpose_blocks(keysize: usize, encrypted_data: &str) -> Vec<String> {
@@ -62,17 +62,23 @@ fn challenge6() {
         scored_keysizes.push((score_keysize(keysize, &contents), keysize));
     }
     scored_keysizes.sort_by(|s1, s2| s1.0.cmp(&s2.0));
-    for i in range(0,10) {
+    for i in range(0,3) {
         let possible_keysize = scored_keysizes[i];
         println!("[{}] Trying with keysize: {} it scored: {}", i, possible_keysize.1, possible_keysize.0);
         let blocks = transpose_blocks(possible_keysize.1, &contents);
-        let repeating_key = blocks.iter().map(|block| {
+        let repeating_key : Vec<u8> = blocks.iter().map(|block| {
             match single_character_xor(&block).pop() {
-                Some((score, ch, result)) => ch,
-                None => 0
+                Some((score, ch, result)) => {
+                    println!("Success: Block: {} \n Char: {} \n length: {}", block, ch, block.len());
+                    ch
+                },
+                None => {
+                    println!("Fail: Block: {} \n length: {}", block, block.len());
+                    0
+                }
             }
         }).collect();
-        println!("{}", rotating_key_xor(&contents, String::from_utf8(repeating_key).unwrap().as_slice()));
+        /* println!("{}", rotating_key_xor(&contents, key.as_slice())); */
     }
 }
 

@@ -20,14 +20,16 @@ pub fn decrypt_message(encrypted_message: &str, test_key: &str) -> Result<Vec<u8
     fixed_xor(encrypted_message, test_key).from_hex()
 }
 
-pub fn letter_frequency_from_file(file_path: &Path) -> BTreeMap<char, usize> {
+pub fn letter_frequency_from_file(file_path: &Path) -> BTreeMap<u8, usize> {
     let contents = String::from_utf8(File::open(file_path).read_to_end().unwrap()).unwrap();
 
-    let mut count: BTreeMap<char, usize> = BTreeMap::new();
+    let mut count: BTreeMap<u8, usize> = BTreeMap::new();
 
     // count the number of occurrences of letters in the vec
     for ch in contents.chars() {
-        match count.entry(ch.to_uppercase()) {
+        let mut ch_bytes = [0;1];
+        ch.encode_utf8(&mut ch_bytes);
+        match count.entry(ch_bytes[0]) {
             Entry::Vacant(view) => {
                 view.insert(1);
             },
@@ -40,10 +42,10 @@ pub fn letter_frequency_from_file(file_path: &Path) -> BTreeMap<char, usize> {
     count
 }
 
-pub fn single_character_xor(encrypted_message: &str) -> Vec<(usize, u8, String)> {
+pub fn single_character_xor(encrypted_message: &str) -> Vec<(usize, u8, &str)> {
     let english_corpus = current_dir().unwrap().join("data").join("example.txt");
     let letter_count = letter_frequency_from_file(&english_corpus);
-    let mut results: Vec<(usize, u8, String)> = Vec::new();
+    let mut results: Vec<(usize, u8, &str)> = Vec::new();
     for x in 1u8.. 255 {
         let mut vec : Vec<u8> = vec![x];
         vec.resize(encrypted_message.len()/2, x);
@@ -51,23 +53,24 @@ pub fn single_character_xor(encrypted_message: &str) -> Vec<(usize, u8, String)>
         let res = decrypt_message(encrypted_message, test_val.as_slice());
         match res {
             Ok(hex_decoded_message) => {
-                match String::from_utf8(hex_decoded_message) {
-                    Ok(real_string) => {
-                        let mut score = 0;
-                        for ch in real_string.chars() {
-                            match letter_count.get(&ch.to_uppercase()) {
-                                Some(char_score) => score += *char_score,
-                                None => {},
-                            }
-                        }
-                        if score > 0 {
-                            results.push((score, x, real_string.clone()));
-                        }
+                for r in hex_decoded_message.iter() {
+                    print!("{}", r);
+                }
+                let real_string = String::from_utf8_lossy(hex_decoded_message.as_slice());
+                let mut score = 0;
+                for ch in real_string.bytes() {
+                    match letter_count.get(&ch) {
+                        Some(char_score) => score += *char_score,
+                        None => {},
                     }
-                    Err(_) => {},
+                }
+                if score > 0 {
+                    results.push((score, x, real_string.as_slice().clone()));
                 }
             }
-            Err(_) => {},
+            Err(e) => {
+                println!("Failure decrypting message: {}", e);
+            },
         }
     }
     results.sort_by(|&(s1, _, _), &(s2, _, _)| s1.cmp(&s2));
