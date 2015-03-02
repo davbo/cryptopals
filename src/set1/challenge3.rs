@@ -1,23 +1,21 @@
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate serialize;
 extern crate collections;
 
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
-use std::old_io::File;
+use std::fs::File;
+use std::io::Read;
+use std::path::AsPath;
 use std::env::current_dir;
 
-
-use self::collections::string::FromUtf8Error;
-use self::rustc_serialize::hex::FromHex;
-use self::rustc_serialize::hex::ToHex;
-use self::rustc_serialize::hex::FromHexError;
 
 use set1::challenge2::fixed_xor;
 
 
 
-pub fn letter_frequency_from_file(file_path: &Path) -> BTreeMap<u8, usize> {
-    let contents = String::from_utf8(File::open(file_path).read_to_end().unwrap()).unwrap();
+pub fn letter_frequency_from_file<P: AsPath + ?Sized>(path: &P) -> BTreeMap<u8, usize> {
+    let mut contents = String::new();
+    let _ = File::open(path).unwrap().read_to_string(&mut contents);
 
     let mut count: BTreeMap<u8, usize> = BTreeMap::new();
 
@@ -74,6 +72,8 @@ pub fn single_character_xor(encrypted_message: &[u8]) -> Vec<(usize, u8, String)
 
 #[test]
 fn challenge3() {
+    use self::serialize::hex::FromHex;
+
     let encrypted_message = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     let mut results = single_character_xor(encrypted_message.from_hex().unwrap().as_slice());
     let (score, byte, ref msg) = results.pop().unwrap();

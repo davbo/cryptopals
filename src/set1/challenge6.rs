@@ -3,8 +3,6 @@ extern crate "rustc-serialize" as rustc_serialize;
 use std::iter::AdditiveIterator;
 use std::num::Int;
 
-use set1::challenge3::single_character_xor;
-use set1::challenge5::rotating_key_xor;
 
 pub fn hamming(left: &[u8], right: &[u8]) -> usize {
     assert_eq!(left.len(), right.len());
@@ -27,9 +25,8 @@ pub fn score_keysize(keysize: usize, encrypted_data: &Vec<u8>) -> usize {
 pub fn transpose_blocks(keysize: usize, encrypted_data: &Vec<u8>) -> Vec<Vec<u8>> {
     let keysize_iterator = encrypted_data.chunks(keysize);
     let mut blocks : Vec<Vec<u8>> = Vec::new();
-    let num_blocks = encrypted_data.len() / keysize;
     blocks.resize(keysize, Vec::with_capacity(keysize));
-    for mut block in keysize_iterator {
+    for block in keysize_iterator {
         let mut counter = range(0, keysize);
         for ch in block {
             let count = counter.next().unwrap();
@@ -42,11 +39,19 @@ pub fn transpose_blocks(keysize: usize, encrypted_data: &Vec<u8>) -> Vec<Vec<u8>
 
 #[test]
 fn challenge6() {
-    use self::rustc_serialize::base64::FromBase64;
-    use std::old_io::File;
+    use std::fs::File;
+    use std::io::Read;
     use std::env::current_dir;
 
-    let contents = File::open(&current_dir().unwrap().join("data").join("6.txt")).read_to_end().unwrap().from_base64().unwrap();
+    use self::rustc_serialize::base64::FromBase64;
+
+    use set1::challenge3::single_character_xor;
+    use set1::challenge5::rotating_key_xor;
+
+    let path = current_dir().unwrap().join("data").join("6.txt");
+    let mut contents = Vec::new();
+    let _ = File::open(&path).unwrap().read_to_end(&mut contents);
+    contents = contents.from_base64().unwrap();
     let mut scored_keysizes: Vec<(usize, usize)> = vec![];
     for keysize in 2..65 {
         scored_keysizes.push((score_keysize(keysize, &contents), keysize));
@@ -58,7 +63,7 @@ fn challenge6() {
         let blocks = transpose_blocks(possible_keysize.1, &contents);
         let repeating_key : Vec<u8> = blocks.iter().map(|block| {
             match single_character_xor(block.as_slice()).pop() {
-                Some((score, ch, result)) => {
+                Some((score, ch, _)) => {
                     key_score += score;
                     ch
                 },

@@ -2,11 +2,8 @@ extern crate core;
 extern crate serialize;
 
 
-
 pub fn fixed_xor(left: &[u8], right: &[u8]) -> Vec<u8> {
-    if (right.len() != left.len()) {
-        return vec![];
-    }
+    assert_eq!(right.len(), left.len());
 
     left.iter().zip(right.iter())
         .map(|(l, r) : (&u8, &u8)| *l ^ *r)
