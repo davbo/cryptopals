@@ -21,24 +21,18 @@ pub fn score_keysize(keysize: usize, encrypted_data: &Vec<u8>) -> usize {
     let sum_distance : usize = range(0, average_over_distances).map(|_| {
         hamming(&keysize_iterator.next().unwrap(), &keysize_iterator.next().unwrap()) / keysize
     }).sum();
-    let avg_distance = (sum_distance*100) / average_over_distances;
-
-
-    println!("Hamming avg_distance: {} sum_distance: {} keysize: {}, score: {}", avg_distance, sum_distance, keysize, avg_distance);
-    avg_distance
+    (sum_distance*100) / average_over_distances
 }
 
 pub fn transpose_blocks(keysize: usize, encrypted_data: &Vec<u8>) -> Vec<Vec<u8>> {
     let keysize_iterator = encrypted_data.chunks(keysize);
     let mut blocks : Vec<Vec<u8>> = Vec::new();
     let num_blocks = encrypted_data.len() / keysize;
-    println!("Num blocks: {}", num_blocks);
     blocks.resize(keysize, Vec::with_capacity(keysize));
     for mut block in keysize_iterator {
         let mut counter = range(0, keysize);
         for ch in block {
             let count = counter.next().unwrap();
-            // println!("Count: {}, CH: {}", count, str::from_utf8(ch).unwrap());
             blocks[count].push(ch.clone());
         }
     }
@@ -59,13 +53,13 @@ fn challenge6() {
     }
     scored_keysizes.sort_by(|s1, s2| s1.0.cmp(&s2.0));
     for i in range(0,2) {
+        let mut key_score = 0;
         let possible_keysize = scored_keysizes[i];
-        println!("[{}] Trying with keysize: {} it scored: {}", i, possible_keysize.1, possible_keysize.0);
         let blocks = transpose_blocks(possible_keysize.1, &contents);
         let repeating_key : Vec<u8> = blocks.iter().map(|block| {
             match single_character_xor(block.as_slice()).pop() {
                 Some((score, ch, result)) => {
-                    // println!("Success: {}, Block: {}\n Res: {} \n Char: {} \n length: {}", score, str::from_utf8(block).unwrap(), result, ch, block.len());
+                    key_score += score;
                     ch
                 },
                 None => {
@@ -74,8 +68,10 @@ fn challenge6() {
                 }
             }
         }).collect();
-        println!("Trying KEY: {}", String::from_utf8_lossy(repeating_key.as_slice()));
-        println!("{}", String::from_utf8_lossy(rotating_key_xor(&contents, repeating_key.as_slice()).as_slice()).as_slice());
+        if key_score > 500000 {
+            println!("Trying KEY: {}, it scored {}", String::from_utf8_lossy(repeating_key.as_slice()), key_score);
+            println!("{}", String::from_utf8_lossy(rotating_key_xor(&contents, repeating_key.as_slice()).as_slice()).as_slice());
+        }
     }
 }
 
