@@ -1,16 +1,28 @@
+extern crate core;
+extern crate collections;
+
+use std::iter::AdditiveIterator;
 use std::slice::SliceExt;
+use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 
 pub fn score_ciphertext_for_ecb_mode(candidate: Vec<u8>) -> usize {
-    let mut score = 0;
-    for out_win in candidate.windows(4) {
-        for in_win in candidate.windows(4) {
-            if out_win == in_win {
-                score += 1
-            }
+    let mut count: BTreeMap<&[u8], usize> = BTreeMap::new();
+
+    for win in candidate.windows(4) {
+        match count.entry(win) {
+            Entry::Vacant(view) => {
+                view.insert(0);
+            },
+            Entry::Occupied(mut view) => {
+                let v = view.get_mut();
+                *v += 1;
+            },
         }
-        score -= 1
     }
-    score
+    let counts : Vec<&usize> = count.values().collect();
+    let summer = counts.iter().cloned();
+    summer.map(|v| *v).sum()
 }
 
 #[test]

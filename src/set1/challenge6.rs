@@ -1,5 +1,7 @@
 extern crate "rustc-serialize" as rustc_serialize;
+extern crate core;
 
+use self::core::num::FromPrimitive;
 use std::iter::AdditiveIterator;
 use std::num::Int;
 
@@ -7,10 +9,12 @@ use std::num::Int;
 pub fn hamming(left: &[u8], right: &[u8]) -> usize {
     assert_eq!(left.len(), right.len());
 
-    left.iter().zip(right.iter())
+    let distance = left.iter().zip(right.iter())
         .map(|(l, r)| l ^ r)
         .map(|xored| xored.count_ones())
-        .sum()
+        .sum();
+    usize::from_u32(distance).unwrap()
+
 }
 
 pub fn score_keysize(keysize: usize, encrypted_data: &Vec<u8>) -> usize {
