@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 use std::fs::File;
 use std::io::Read;
-use std::path::AsPath;
+use std::path::PathBuf;
 use std::env::current_dir;
 
 
@@ -13,7 +13,7 @@ use set1::challenge2::fixed_xor;
 
 
 
-pub fn letter_frequency_from_file<P: AsPath + ?Sized>(path: &P) -> BTreeMap<u8, usize> {
+pub fn letter_frequency_from_file(path: &PathBuf) -> BTreeMap<u8, usize> {
     let mut contents = String::new();
     let _ = File::open(path).unwrap().read_to_string(&mut contents);
 

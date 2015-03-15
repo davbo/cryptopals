@@ -29,7 +29,7 @@ pub fn score_ciphertext_for_ecb_mode(candidate: Vec<u8>) -> usize {
 fn challenge8() {
     use std::fs::File;
     use std::io::BufReader;
-    use std::io::BufReadExt;
+    use std::io::BufRead;
     use std::env::current_dir;
     let f = File::open(&current_dir().unwrap().join("data").join("8.txt")).unwrap();
     let reader = BufReader::new(f);

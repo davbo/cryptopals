@@ -5,7 +5,7 @@ fn challenge4() {
     use self::serialize::hex::FromHex;
     use std::fs::File;
     use std::io::BufReader;
-    use std::io::BufReadExt;
+    use std::io::BufRead;
     use std::env::current_dir;
     use set1::challenge3::single_character_xor;
     let f = File::open(&current_dir().unwrap().join("data").join("4.txt")).unwrap();
