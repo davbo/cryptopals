@@ -1,10 +1,11 @@
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
+use std::ops::Deref;
 
 use self::rustc_serialize::base64::{self, ToBase64};
 use self::rustc_serialize::hex::FromHex;
 
 pub fn convert_to_base64(input: &str) -> String {
-    input.from_hex().unwrap().as_slice().to_base64(base64::STANDARD)
+    input.from_hex().unwrap().deref().to_base64(base64::STANDARD)
 }
 
 #[test]

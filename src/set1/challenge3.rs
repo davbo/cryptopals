@@ -1,5 +1,4 @@
-extern crate serialize;
-extern crate collections;
+extern crate rustc_serialize;
 
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
@@ -7,6 +6,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::env::current_dir;
+use std::ops::Deref;
 
 
 use set1::challenge2::fixed_xor;
@@ -54,7 +54,7 @@ pub fn single_character_xor(encrypted_message: &[u8]) -> Vec<(usize, u8, String)
     for x in 0u8..250 {
         let mut vec : Vec<u8> = vec![x as u8];
         vec.resize(encrypted_message.len(), x as u8);
-        let res = fixed_xor(encrypted_message, vec.as_slice());
+        let res = fixed_xor(encrypted_message, vec.deref());
         let score = score_bytes(&res, &letter_count);
 
         if score > 0 {
@@ -72,11 +72,11 @@ pub fn single_character_xor(encrypted_message: &[u8]) -> Vec<(usize, u8, String)
 
 #[test]
 fn challenge3() {
-    use self::serialize::hex::FromHex;
+    use self::rustc_serialize::hex::FromHex;
 
     let encrypted_message = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-    let mut results = single_character_xor(encrypted_message.from_hex().unwrap().as_slice());
+    let mut results = single_character_xor(encrypted_message.from_hex().unwrap().deref());
     let (score, byte, ref msg) = results.pop().unwrap();
     println!("score: {}, byte: {}, msg: {}", score, byte, msg);
-    assert_eq!("Cooking MC's like a pound of bacon", msg.as_slice());
+    assert_eq!("Cooking MC's like a pound of bacon", msg.as_str());
 }

@@ -1,26 +1,21 @@
-extern crate "rustc-serialize" as rustc_serialize;
-extern crate core;
-
-use self::core::num::FromPrimitive;
-use std::iter::AdditiveIterator;
-use std::num::Int;
+extern crate rustc_serialize;
 
 
 pub fn hamming(left: &[u8], right: &[u8]) -> usize {
     assert_eq!(left.len(), right.len());
 
-    let distance = left.iter().zip(right.iter())
+    let distance : u32 = left.iter().zip(right.iter())
         .map(|(l, r)| l ^ r)
         .map(|xored| xored.count_ones())
         .sum();
-    usize::from_u32(distance).unwrap()
+    distance as usize
 
 }
 
 pub fn score_keysize(keysize: usize, encrypted_data: &Vec<u8>) -> usize {
     let mut keysize_iterator = encrypted_data.chunks(keysize);
     let average_over_distances = 5;
-    let sum_distance : usize = range(0, average_over_distances).map(|_| {
+    let sum_distance : usize = (0.. average_over_distances).map(|_| {
         hamming(&keysize_iterator.next().unwrap(), &keysize_iterator.next().unwrap()) / keysize
     }).sum();
     (sum_distance*100) / average_over_distances
@@ -31,7 +26,7 @@ pub fn transpose_blocks(keysize: usize, encrypted_data: &Vec<u8>) -> Vec<Vec<u8>
     let mut blocks : Vec<Vec<u8>> = Vec::new();
     blocks.resize(keysize, Vec::with_capacity(keysize));
     for block in keysize_iterator {
-        let mut counter = range(0, keysize);
+        let mut counter = (0.. keysize);
         for ch in block {
             let count = counter.next().unwrap();
             blocks[count].push(ch.clone());
@@ -61,7 +56,7 @@ fn challenge6() {
         scored_keysizes.push((score_keysize(keysize, &contents), keysize));
     }
     scored_keysizes.sort_by(|s1, s2| s1.0.cmp(&s2.0));
-    for i in range(0,2) {
+    for i in 0.. 2 {
         let mut key_score = 0;
         let possible_keysize = scored_keysizes[i];
         let blocks = transpose_blocks(possible_keysize.1, &contents);
@@ -79,7 +74,7 @@ fn challenge6() {
         }).collect();
         if key_score > 500000 {
             println!("Trying KEY: {}, it scored {}", String::from_utf8_lossy(repeating_key.as_slice()), key_score);
-            println!("{}", String::from_utf8_lossy(rotating_key_xor(&contents, repeating_key.as_slice()).as_slice()).as_slice());
+            println!("{}", String::from_utf8_lossy(rotating_key_xor(&contents, repeating_key.as_slice()).as_slice()).into_owned());
         }
     }
 }

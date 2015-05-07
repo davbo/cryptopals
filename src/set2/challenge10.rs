@@ -1,4 +1,4 @@
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 extern crate openssl;
 
 use self::openssl::crypto::symm::{Crypter, Type, Mode};

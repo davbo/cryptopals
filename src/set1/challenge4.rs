@@ -1,4 +1,5 @@
 extern crate serialize;
+use std::ops::Deref;
 
 #[test]
 fn challenge4() {
@@ -13,11 +14,11 @@ fn challenge4() {
     for encrypted_message in reader.lines() {
         match encrypted_message {
             Ok(candidate) => {
-                let mut results = single_character_xor(candidate.from_hex().unwrap().as_slice());
+                let mut results = single_character_xor(candidate.from_hex().unwrap().deref());
                 if results.len() > 0 {
                     let (best_score, _, ref msg) = results.pop().unwrap();
                     if best_score > 6500 {
-                        assert_eq!("Now that the party is jumping\n", msg.as_slice());
+                        assert_eq!("Now that the party is jumping\n", msg.as_str());
                         break;
                     }
                 }
