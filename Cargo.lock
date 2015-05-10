@@ -3,6 +3,7 @@ name = "matasano"
 version = "0.0.1"
 dependencies = [
  "openssl 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
