@@ -8,7 +8,7 @@ use std::collections::btree_map::Entry;
 pub fn score_ciphertext_for_ecb_mode(candidate: Vec<u8>) -> usize {
     let mut count: BTreeMap<&[u8], usize> = BTreeMap::new();
 
-    for win in candidate.windows(4) {
+    for win in candidate.windows(16) {
         match count.entry(win) {
             Entry::Vacant(view) => {
                 view.insert(0);

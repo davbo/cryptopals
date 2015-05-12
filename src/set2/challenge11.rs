@@ -31,7 +31,7 @@ pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
 
     if use_cbc_mode {
         println!("cbc mode!");
-        cbc_mode(plaintext, key.as_slice(), Mode::Encrypt)
+        cbc_mode(plaintext, key.as_slice(), key.as_slice(), Mode::Encrypt)
     } else {
         println!("ecb mode!");
         let crypter = Crypter::new(Type::AES_128_ECB);
@@ -45,7 +45,7 @@ pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
 
 #[test]
 fn challenge11() {
-    let ciphertext = encryption_oracle(b"YELLOW SUBMARINEYELLOW SUBMARINE");
+    let ciphertext = encryption_oracle(b"YELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINE");
     println!("{:?}", ciphertext);
     println!("{:?}", score_ciphertext_for_ecb_mode(ciphertext));
 }
