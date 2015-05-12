@@ -14,7 +14,6 @@ pub fn cbc_mode(message: Vec<u8>, key: &[u8], mode: Mode) -> Vec<u8> {
     let mut iv = vec![0;16];
     let mut result : Vec<u8> = Vec::new();
     for chunk in message.chunks(16) {
-        println!("{:?}", chunk);
         let chunk_enc = fixed_xor(iv.as_slice(), crypter.update(chunk).as_slice());
         iv.clear();
         iv.push_all(chunk);

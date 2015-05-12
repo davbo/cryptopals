@@ -45,7 +45,7 @@ pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
 
 #[test]
 fn challenge11() {
-    let ciphertext = encryption_oracle(b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    let ciphertext = encryption_oracle(b"YELLOW SUBMARINEYELLOW SUBMARINE");
     println!("{:?}", ciphertext);
     println!("{:?}", score_ciphertext_for_ecb_mode(ciphertext));
 }
