@@ -45,3 +45,11 @@ fn challenge8() {
     let (best_candidate, top_score) = scored_ciphertexts.pop().unwrap();
     println!("{} - {}", best_candidate, top_score);
 }
+
+#[test]
+fn finds_repeating_blocks() {
+    let mut ciphertext = Vec::new();
+    ciphertext.push_all(b"YELLOW SUBMARINEYELLOW SUBMARINE");
+    assert_eq!(score_ciphertext_for_ecb_mode(ciphertext), 1);
+
+}

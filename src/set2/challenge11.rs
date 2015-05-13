@@ -20,20 +20,22 @@ pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
     let count_append_bytes = prepend_append_range.sample(&mut rng);
 
 
+    println!("input: {:?} - len {}", input, input.len());
     let prepend_bytes: Vec<u8> = (0.. count_prepend_bytes).map(|_| -> u8 { rng.gen() }).collect();
     let append_bytes: Vec<u8> = (0.. count_append_bytes).map(|_| -> u8 { rng.gen() }).collect();
 
     let mut plaintext: Vec<u8> = prepend_bytes.iter().cloned().chain(input.iter().cloned().chain(append_bytes.iter().cloned())).collect();
     plaintext.pad(16);
+    println!("plaintext: {:?} - len {}", plaintext, plaintext.len());
 
 
     let key: Vec<u8> = (0.. 16).map(|_| -> u8 { rng.gen() }).collect();
 
     if use_cbc_mode {
-        println!("cbc mode!");
+        println!("Using CBC mode");
         cbc_mode(plaintext, key.as_slice(), key.as_slice(), Mode::Encrypt)
     } else {
-        println!("ecb mode!");
+        println!("Using ECB mode");
         let crypter = Crypter::new(Type::AES_128_ECB);
         crypter.init(Mode::Encrypt, key.as_slice(), vec![]);
         crypter.pad(false);
@@ -45,7 +47,10 @@ pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
 
 #[test]
 fn challenge11() {
-    let ciphertext = encryption_oracle(b"YELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINE");
-    println!("{:?}", ciphertext);
-    println!("{:?}", score_ciphertext_for_ecb_mode(ciphertext));
+    let ciphertext = encryption_oracle(b"YELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINE");
+    if score_ciphertext_for_ecb_mode(ciphertext) == 1 {
+        println!("Detected ECB Mode");
+    } else {
+        println!("Detected CBC Mode");
+    }
 }
