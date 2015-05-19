@@ -38,34 +38,35 @@ fn challenge_12() {
         let res = encryption_oracle(&prepend_vec);
         if score_ciphertext_for_ecb_mode(res) == 1 {
             println!("Found block size {:?}", i/2);
-            block_size = i;
+            block_size = i/2;
             break;
         }
     }
     // Decrypt each byte in the blocksize
     let mut decrypted_bytes = Vec::new();
-    // Need to continue for all bytes here
-    for i in 1.. block_size {
-        println!("i: {}", i);
-        let capture_block = vec![0 as u8; block_size-i];
+    // Probably shouldn't be assuming we'd know the message length..
+    let message_length = MESSAGE.len() - (MESSAGE.len()%block_size);
+    let mut complete;
+    for i in 1.. message_length {
+        let capture_block = vec![0 as u8; message_length-i];
         let result = encryption_oracle(&capture_block);
-        let (target_permutation, _) = result.split_at(block_size);
-        let mut capture_block = vec![0 as u8; block_size-i];
+        let (target_permutation, _) = result.split_at(message_length);
+        let mut capture_block = vec![0 as u8; message_length-i];
         capture_block.push_all(decrypted_bytes.as_slice());
+        complete = true;
         for test_byte in 0.. 255 {
-            // println!("Test: {}", test_byte);
             capture_block.push(test_byte);
             let result = encryption_oracle(&capture_block);
-            let (test_permutation, _) = result.split_at(block_size);
+            let (test_permutation, _) = result.split_at(message_length);
             capture_block.pop();
             if test_permutation == target_permutation {
-                println!("WOOP: {}", test_byte);
-                println!("Test: {:?} - Target: {:?}", test_permutation, target_permutation);
+                // Found a match, continue building the prefix
+                complete = false;
                 decrypted_bytes.push(test_byte);
                 break;
             }
         }
+        if complete { break; }
     }
-    // decrypted_bytes.reverse();
     println!("Decrypted: {:?}", String::from_utf8(decrypted_bytes).unwrap());
 }
