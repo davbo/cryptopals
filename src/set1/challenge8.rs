@@ -1,7 +1,3 @@
-extern crate core;
-extern crate collections;
-
-use std::slice::IntSliceExt;
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 
@@ -21,7 +17,7 @@ pub fn score_ciphertext_for_ecb_mode(candidate: Vec<u8>) -> usize {
     }
     let counts : Vec<&usize> = count.values().collect();
     let summer = counts.iter().cloned();
-    summer.map(|v| *v).sum()
+    summer.fold(0, |acc, item| acc + item)
 }
 
 #[test]
@@ -49,7 +45,7 @@ fn challenge8() {
 #[test]
 fn finds_repeating_blocks() {
     let mut ciphertext = Vec::new();
-    ciphertext.push_all(b"YELLOW SUBMARINEYELLOW SUBMARINE");
+    ciphertext.extend(b"YELLOW SUBMARINEYELLOW SUBMARINE".iter().cloned());
     assert_eq!(score_ciphertext_for_ecb_mode(ciphertext), 1);
 
 }

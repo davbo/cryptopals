@@ -13,17 +13,15 @@ use set1::challenge2::fixed_xor;
 
 
 
-pub fn letter_frequency_from_file(path: &PathBuf) -> BTreeMap<u8, usize> {
+pub fn letter_frequency_from_file(path: &PathBuf) -> BTreeMap<u32, usize> {
     let mut contents = String::new();
     let _ = File::open(path).unwrap().read_to_string(&mut contents);
 
-    let mut count: BTreeMap<u8, usize> = BTreeMap::new();
+    let mut count: BTreeMap<u32, usize> = BTreeMap::new();
 
     // count the number of occurrences of letters in the vec
     for ch in contents.chars() {
-        let mut ch_bytes = [0;1];
-        ch.encode_utf8(&mut ch_bytes);
-        match count.entry(ch_bytes[0]) {
+        match count.entry(ch as u32) {
             Entry::Vacant(view) => {
                 view.insert(1);
             },
@@ -36,10 +34,11 @@ pub fn letter_frequency_from_file(path: &PathBuf) -> BTreeMap<u8, usize> {
     count
 }
 
-pub fn score_bytes(to_score: &Vec<u8>, corpus: &BTreeMap<u8, usize>) -> usize {
+pub fn score_bytes(to_score: &Vec<u8>, corpus: &BTreeMap<u32, usize>) -> usize {
     let mut score = 0;
     for byte in to_score {
-        match corpus.get(&byte) {
+        let map_index = *byte as u32;
+        match corpus.get(&map_index) {
             Some(char_score) => { score += *char_score; }
             None => {},
         }
@@ -52,8 +51,7 @@ pub fn single_character_xor(encrypted_message: &[u8]) -> Vec<(usize, u8, String)
     let letter_count = letter_frequency_from_file(&english_corpus);
     let mut results: Vec<(usize, u8, String)> = Vec::new();
     for x in 0u8..250 {
-        let mut vec : Vec<u8> = vec![x as u8];
-        vec.resize(encrypted_message.len(), x as u8);
+        let vec : Vec<u8> = vec![x as u8; encrypted_message.len()];
         let res = fixed_xor(encrypted_message, vec.deref());
         let score = score_bytes(&res, &letter_count);
 
@@ -78,5 +76,5 @@ fn challenge3() {
     let mut results = single_character_xor(encrypted_message.from_hex().unwrap().deref());
     let (score, byte, ref msg) = results.pop().unwrap();
     println!("score: {}, byte: {}, msg: {}", score, byte, msg);
-    assert_eq!("Cooking MC's like a pound of bacon", msg.as_str());
+    assert_eq!("Cooking MC's like a pound of bacon", msg);
 }

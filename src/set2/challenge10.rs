@@ -12,13 +12,13 @@ pub fn cbc_mode(message: Vec<u8>, key: &[u8], iv: &[u8], mode: Mode) -> Vec<u8> 
     crypter.pad(false);
 
     let mut pad = Vec::new();
-    pad.push_all(iv);
+    pad.extend(iv.iter());
     let mut result : Vec<u8> = Vec::new();
     for chunk in message.chunks(16) {
-        let chunk_enc = fixed_xor(pad.as_slice(), crypter.update(chunk).as_slice());
+        let chunk_enc = fixed_xor(pad.as_ref(), crypter.update(chunk).as_ref());
         pad.clear();
-        pad.push_all(chunk);
-        result.push_all(chunk_enc.as_slice());
+        pad.extend(chunk.iter());
+        result.extend(chunk_enc.iter());
     }
     result
 }
@@ -39,7 +39,7 @@ fn challenge10() {
     let key = b"YELLOW SUBMARINE";
     let iv = vec![0;16];
 
-    let decrypted_data = cbc_mode(contents, key, iv.as_slice(), Mode::Decrypt);
+    let decrypted_data = cbc_mode(contents, key, iv.as_ref(), Mode::Decrypt);
     let decrypted_string = String::from_utf8_lossy(&decrypted_data);
     println!("{}", decrypted_string);
 }
@@ -48,6 +48,6 @@ fn challenge10() {
 fn enc_dec() {
     let key = b"YELLOW SUBMARINE";
     let iv = vec![0;16];
-    assert_eq!(cbc_mode(cbc_mode(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], key, iv.as_slice(), Mode::Encrypt), key, iv.as_slice(), Mode::Decrypt),
+    assert_eq!(cbc_mode(cbc_mode(vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], key, iv.as_ref(), Mode::Encrypt), key, iv.as_ref(), Mode::Decrypt),
     vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
 }

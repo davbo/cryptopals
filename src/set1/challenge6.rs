@@ -7,7 +7,7 @@ pub fn hamming(left: &[u8], right: &[u8]) -> usize {
     let distance : u32 = left.iter().zip(right.iter())
         .map(|(l, r)| l ^ r)
         .map(|xored| xored.count_ones())
-        .sum();
+        .fold(0, |acc, item| acc + item);
     distance as usize
 
 }
@@ -17,14 +17,13 @@ pub fn score_keysize(keysize: usize, encrypted_data: &Vec<u8>) -> usize {
     let average_over_distances = 5;
     let sum_distance : usize = (0.. average_over_distances).map(|_| {
         hamming(&keysize_iterator.next().unwrap(), &keysize_iterator.next().unwrap()) / keysize
-    }).sum();
+    }).fold(0, |acc, item| acc + item);
     (sum_distance*100) / average_over_distances
 }
 
 pub fn transpose_blocks(keysize: usize, encrypted_data: &Vec<u8>) -> Vec<Vec<u8>> {
     let keysize_iterator = encrypted_data.chunks(keysize);
-    let mut blocks : Vec<Vec<u8>> = Vec::new();
-    blocks.resize(keysize, Vec::with_capacity(keysize));
+    let mut blocks : Vec<Vec<u8>> = vec![Vec::with_capacity(keysize); keysize];
     for block in keysize_iterator {
         let mut counter = (0.. keysize);
         for ch in block {
@@ -61,7 +60,7 @@ fn challenge6() {
         let possible_keysize = scored_keysizes[i];
         let blocks = transpose_blocks(possible_keysize.1, &contents);
         let repeating_key : Vec<u8> = blocks.iter().map(|block| {
-            match single_character_xor(block.as_slice()).pop() {
+            match single_character_xor(block.as_ref()).pop() {
                 Some((score, ch, _)) => {
                     key_score += score;
                     ch
@@ -73,8 +72,8 @@ fn challenge6() {
             }
         }).collect();
         if key_score > 500000 {
-            println!("Trying KEY: {}, it scored {}", String::from_utf8_lossy(repeating_key.as_slice()), key_score);
-            println!("{}", String::from_utf8_lossy(rotating_key_xor(&contents, repeating_key.as_slice()).as_slice()).into_owned());
+            println!("Trying KEY: {}, it scored {}", String::from_utf8_lossy(repeating_key.as_ref()), key_score);
+            println!("{}", String::from_utf8_lossy(rotating_key_xor(&contents, repeating_key.as_ref()).as_ref()).into_owned());
         }
     }
 }

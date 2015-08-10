@@ -18,13 +18,13 @@ pub fn encryption_oracle(prepend_bytes: &[u8]) -> Vec<u8> {
 
     let decoded_message = MESSAGE.from_base64().unwrap();
     let mut plaintext = Vec::new();
-    plaintext.push_all(prepend_bytes);
-    plaintext.push_all(&decoded_message);
+    plaintext.extend(prepend_bytes.iter());
+    plaintext.extend(decoded_message.iter());
 
     let crypter = Crypter::new(Type::AES_128_ECB);
     crypter.init(Mode::Encrypt, KEY, vec![]);
     crypter.pad(false);
-    let mut ciphertext = crypter.update(plaintext.as_slice());
+    let mut ciphertext = crypter.update(plaintext.as_ref());
     ciphertext.extend(crypter.finalize().into_iter());
     ciphertext
 }
@@ -34,7 +34,7 @@ fn challenge_12() {
     let mut block_size = 0;
     for i in 0.. 40 {
         let mut prepend_vec = Vec::new();
-        prepend_vec.resize(i, b'A');
+        prepend_vec.extend(vec![b'A';i].iter());
         let res = encryption_oracle(&prepend_vec);
         if score_ciphertext_for_ecb_mode(res) == 1 {
             println!("Found block size {:?}", i/2);
@@ -52,7 +52,7 @@ fn challenge_12() {
         let result = encryption_oracle(&capture_block);
         let (target_permutation, _) = result.split_at(message_length);
         let mut capture_block = vec![0 as u8; message_length-i];
-        capture_block.push_all(decrypted_bytes.as_slice());
+        capture_block.extend(decrypted_bytes.iter());
         complete = true;
         for test_byte in 0.. 255 {
             capture_block.push(test_byte);

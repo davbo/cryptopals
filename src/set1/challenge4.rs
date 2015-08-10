@@ -1,9 +1,9 @@
-extern crate serialize;
+extern crate rustc_serialize;
 use std::ops::Deref;
 
 #[test]
 fn challenge4() {
-    use self::serialize::hex::FromHex;
+    use self::rustc_serialize::hex::FromHex;
     use std::fs::File;
     use std::io::BufReader;
     use std::io::BufRead;
@@ -18,7 +18,7 @@ fn challenge4() {
                 if results.len() > 0 {
                     let (best_score, _, ref msg) = results.pop().unwrap();
                     if best_score > 6500 {
-                        assert_eq!("Now that the party is jumping\n", msg.as_str());
+                        assert_eq!("Now that the party is jumping\n", msg);
                         break;
                     }
                 }

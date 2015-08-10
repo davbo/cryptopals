@@ -33,13 +33,13 @@ pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
 
     if use_cbc_mode {
         println!("Using CBC mode");
-        cbc_mode(plaintext, key.as_slice(), key.as_slice(), Mode::Encrypt)
+        cbc_mode(plaintext, key.as_ref(), key.as_ref(), Mode::Encrypt)
     } else {
         println!("Using ECB mode");
         let crypter = Crypter::new(Type::AES_128_ECB);
-        crypter.init(Mode::Encrypt, key.as_slice(), vec![]);
+        crypter.init(Mode::Encrypt, key.as_ref(), vec![]);
         crypter.pad(false);
-        let mut ciphertext = crypter.update(plaintext.as_slice());
+        let mut ciphertext = crypter.update(plaintext.as_ref());
         ciphertext.extend(crypter.finalize().into_iter());
         ciphertext
     }

@@ -19,7 +19,7 @@ fn challenge7() {
     let crypter = Crypter::new(Type::AES_128_ECB);
     crypter.init(Mode::Decrypt, key, vec![]);
     crypter.pad(false);
-    let decrypted_data = crypter.update(contents.as_slice());
+    let decrypted_data = crypter.update(&contents[..]);
     let decrypted_string = String::from_utf8(decrypted_data).unwrap();
     assert!(decrypted_string.contains("Play that funky music"));
 }
