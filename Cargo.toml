@@ -9,5 +9,5 @@ name = "matasano"
 
 [dependencies]
 rustc-serialize = "0.3.14"
-openssl = "0.6.1"
+openssl = "0.6.4"
 rand = "0.3.8"
