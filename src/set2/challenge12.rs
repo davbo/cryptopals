@@ -23,7 +23,7 @@ pub fn encryption_oracle(prepend_bytes: &[u8]) -> Vec<u8> {
 
     let crypter = Crypter::new(Type::AES_128_ECB);
     crypter.init(Mode::Encrypt, KEY, vec![]);
-    crypter.pad(false);
+    crypter.pad(true);
     let mut ciphertext = crypter.update(plaintext.as_ref());
     ciphertext.extend(crypter.finalize().into_iter());
     ciphertext
@@ -33,9 +33,7 @@ pub fn encryption_oracle(prepend_bytes: &[u8]) -> Vec<u8> {
 fn challenge_12() {
     let mut block_size = 0;
     for i in 0.. 40 {
-        let mut prepend_vec = Vec::new();
-        prepend_vec.extend(vec![b'A';i].iter());
-        let res = encryption_oracle(&prepend_vec);
+        let res = encryption_oracle(&vec![b'A';i]);
         if score_ciphertext_for_ecb_mode(res) == 1 {
             println!("Found block size {:?}", i/2);
             block_size = i/2;
