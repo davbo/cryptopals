@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
 
-pub fn score_ciphertext_for_ecb_mode(candidate: Vec<u8>) -> usize {
+pub fn find_repeating_blocks<'a>(candidate: &'a[u8]) -> BTreeMap<&'a[u8], usize> {
     let mut count: BTreeMap<&[u8], usize> = BTreeMap::new();
 
     for win in candidate.windows(16) {
@@ -15,7 +15,12 @@ pub fn score_ciphertext_for_ecb_mode(candidate: Vec<u8>) -> usize {
             },
         }
     }
-    let counts : Vec<&usize> = count.values().collect();
+    count
+}
+
+pub fn score_ciphertext_for_ecb_mode(candidate: Vec<u8>) -> usize {
+    let repeat_counts = find_repeating_blocks(&candidate);
+    let counts : Vec<&usize> = repeat_counts.values().collect();
     let summer = counts.iter().cloned();
     summer.fold(0, |acc, item| acc + item)
 }
