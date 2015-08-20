@@ -31,28 +31,65 @@ fn encryption_oracle(attacker_input: &[u8]) -> Vec<u8> {
 }
 
 fn find_target_permutation(byte_index: usize, block_size: usize, marker_cipher: Vec<u8>) -> Vec<u8> {
-    let message_length = MESSAGE.len() - (MESSAGE.len()%block_size);
+    let message_length = MESSAGE.len();
     let capture_block = vec![1 as u8; message_length-(byte_index+1)];
-    let num_capture_blocks = capture_block.len() / 16;
+    let mut num_capture_blocks = capture_block.len() / block_size;
+    if (capture_block.len() % block_size != 0) {
+        num_capture_blocks +=1;
+    }
     let mut attack_input = vec![0 as u8; block_size];
     attack_input.extend(capture_block);
     let mut target_permutation = vec![];
     let mut found_marker = false;
     while !found_marker {
         let ciphertext = encryption_oracle(&attack_input);
-        println!("New cipher");
         {
             let chunks = ciphertext.chunks(block_size);
             let mut remaining = chunks.skip_while(|ch| !marker_cipher.starts_with(ch)).peekable();
             if !remaining.peek().is_none() {
-                println!("found marker");
                 found_marker = true;
+                remaining.next();
                 target_permutation = remaining.take(num_capture_blocks).flat_map(|s| s).map(|v| *v).collect();
             }
 
         }
     }
     target_permutation
+}
+
+fn test_byte(candidate: u8, byte_index: usize, block_size: usize, marker_cipher: Vec<u8>, target_permutation: Vec<u8>, decrypted_bytes: &[u8]) -> bool {
+    let message_length = MESSAGE.len();
+    let mut capture_block = vec![1 as u8; message_length-(byte_index+1)];
+    capture_block.extend(decrypted_bytes.iter());
+    capture_block.push(candidate);
+    let mut num_capture_blocks = capture_block.len() / block_size;
+    if (capture_block.len() % block_size != 0) {
+        num_capture_blocks +=1;
+    }
+    let mut attack_input = vec![0 as u8; block_size];
+    attack_input.extend(capture_block.clone());
+    // println!("Capture block length: {}, Attack block length: {}", capture_block.len(), attack_input.len());
+    let mut found_marker = false;
+    let mut result = false;
+    while !found_marker {
+        let ciphertext = encryption_oracle(&attack_input);
+        {
+            let chunks = ciphertext.chunks(block_size);
+            let mut remaining = chunks.skip_while(|ch| !marker_cipher.starts_with(ch)).peekable();
+            if !remaining.peek().is_none() {
+                found_marker = true;
+                remaining.next();
+                let permutation: Vec<u8> = remaining.take(num_capture_blocks).flat_map(|s| s).map(|v| *v).collect();
+                if (permutation == target_permutation) {
+                    // println!("Candidate: {}, permutation: {:?} - target: {:?}", candidate, permutation, target_permutation);
+                    result = true;
+                }
+            }
+
+        }
+    }
+    // println!("Candidate: {} - Result: {}", candidate, result);
+    result
 }
 
 fn find_marker_block(block_size: usize) -> Vec<u8> {
@@ -73,38 +110,20 @@ fn find_marker_block(block_size: usize) -> Vec<u8> {
 
 #[test]
 fn challenge14() {
-    let mut block_size = 16;
+    let block_size = 16;
     let marker_block = find_marker_block(block_size);
-    println!("Found marker block {:?}", marker_block);
-    let target_permutation = find_target_permutation(0, block_size, marker_block);
-    println!("Found target {:?}", target_permutation);
 
-    // Decrypt each byte in the blocksize
+    let message_length = MESSAGE.len();
     let mut decrypted_bytes = Vec::new();
-    // Probably shouldn't be assuming we'd know the message length..
-    let message_length = MESSAGE.len() - (MESSAGE.len()%block_size);
-    let mut complete;
-    for i in 1.. message_length {
-        let capture_block = vec![0 as u8; message_length-i];
-        let result = encryption_oracle(&capture_block);
-        let (target_permutation, _) = result.split_at(message_length);
-        let mut capture_block = vec![0 as u8; message_length-i];
-        capture_block.extend(decrypted_bytes.iter());
-        complete = true;
-        for test_byte in 0.. 255 {
-            capture_block.push(test_byte);
-            let result = encryption_oracle(&capture_block);
-            let (test_permutation, _) = result.split_at(message_length);
-            capture_block.pop();
-            if test_permutation == target_permutation {
-                // Found a match, continue building the prefix
-                complete = false;
-                decrypted_bytes.push(test_byte);
+    for i in 0.. message_length {
+        let target_permutation = find_target_permutation(i, block_size, marker_block.clone());
+        for candidate in 0.. 126 {
+            let matched = test_byte(candidate, i, block_size, marker_block.clone(), target_permutation.clone(), &decrypted_bytes);
+            if matched {
+                decrypted_bytes.push(candidate);
                 break;
             }
         }
-        if complete { break; }
     }
-    println!("Decrypted: {:?}", String::from_utf8(decrypted_bytes).unwrap());
-    // assert!(false);
+    assert_eq!("Rollin\' in my 5", String::from_utf8(decrypted_bytes).unwrap());
 }
