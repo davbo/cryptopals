@@ -66,5 +66,5 @@ fn challenge_12() {
         }
         if complete { break; }
     }
-    println!("Decrypted: {:?}", String::from_utf8(decrypted_bytes).unwrap());
+    println!("Decrypted: {}", String::from_utf8(decrypted_bytes).unwrap());
 }
