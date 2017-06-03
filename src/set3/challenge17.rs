@@ -1,4 +1,8 @@
 extern crate rand;
+extern crate rustc_serialize;
+extern crate openssl;
+use self::openssl::crypto::symm::Mode;
+use set2::challenge10::cbc_mode;
 
 const BLOCK_LENGTH: usize = 16;
 
@@ -27,6 +31,13 @@ fn pad(mut input: Vec<u8>) -> Vec<u8> {
 }
 
 
+fn decrypt_and_check_padding(ciphertext: Vec<u8>, key: &[u8], iv: &[u8]) -> bool {
+    let decrypted = cbc_mode(ciphertext, key, iv, Mode::Decrypt);
+    let final_byte = decrypted[decrypted.len()-1];
+    let expected_padding = vec![final_byte; final_byte as usize];
+    decrypted.ends_with(&expected_padding)
+}
+
 #[test]
 fn pkcs7_padding() {
     assert_eq!(vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14,2,2], pad(vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14]));
@@ -38,7 +49,51 @@ fn pkcs7_padding() {
 
 #[test]
 fn challenge17() {
-    let aes_key = rand::random::<[u8;16]>();
-    println!("{:?}", aes_key);
-    assert!(true);
+    use self::rustc_serialize::base64::FromBase64;
+    use self::rand::{thread_rng, Rng};
+    use set1::challenge2::fixed_xor;
+
+
+    let mut rng = thread_rng();
+    let aes_key = rng.gen::<[u8;16]>();
+    let iv = rng.gen::<[u8;16]>();
+    let choices = &INPUT_STRINGS;
+    let input_string = rng.choose(choices).unwrap().from_base64().unwrap();
+    let padded_input = pad(input_string);
+    println!("Input: {:?}", padded_input);
+
+    let ciphertext = cbc_mode(padded_input.clone(), &aes_key, &iv, Mode::Encrypt);
+    assert!(decrypt_and_check_padding(ciphertext.clone(), &aes_key, &iv));
+
+    let mut intermediary: Vec<u8> = vec![];
+    for chunk in ciphertext.chunks(BLOCK_LENGTH).rev() {
+        for target_index in (0..16).rev() {
+            let expected_padding_byte: u8 = BLOCK_LENGTH as u8 - target_index as u8;
+            for guess in 0..255 {
+                let mut guess_block = vec![0;target_index];
+                guess_block.push(guess);
+                for val in intermediary.clone().iter().rev() {
+                    if guess_block.len() == 16 {
+                        break;
+                    }
+                    guess_block.push(val ^ expected_padding_byte);
+                }
+                if decrypt_and_check_padding(chunk.to_vec(), &aes_key, &guess_block) {
+                    intermediary.push(guess_block[target_index] ^ expected_padding_byte);
+                    break;
+                }
+            }
+        }
+    }
+    let mut cipher_iter = ciphertext.chunks(BLOCK_LENGTH).rev();
+    cipher_iter.next();
+    let mut plaintext_blocks: Vec<Vec<u8>> = vec![];
+    for (cipher_block, intermediary_block) in cipher_iter.zip(intermediary.chunks(BLOCK_LENGTH)) {
+        let mut inter_block = intermediary_block.clone().to_owned();
+        inter_block.reverse();
+        plaintext_blocks.insert(0, fixed_xor(inter_block.as_slice(), cipher_block));
+    }
+    let plaintext: Vec<u8> = plaintext_blocks.concat();
+    println!("{:?}", plaintext);
+    assert_eq!(padded_input[padded_input.len()-plaintext.len()..].to_vec(), plaintext);
 }

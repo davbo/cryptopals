@@ -25,7 +25,7 @@ pub fn transpose_blocks(keysize: usize, encrypted_data: &Vec<u8>) -> Vec<Vec<u8>
     let keysize_iterator = encrypted_data.chunks(keysize);
     let mut blocks : Vec<Vec<u8>> = vec![Vec::with_capacity(keysize); keysize];
     for block in keysize_iterator {
-        let mut counter = (0.. keysize);
+        let mut counter = 0.. keysize;
         for ch in block {
             let count = counter.next().unwrap();
             blocks[count].push(ch.clone());
