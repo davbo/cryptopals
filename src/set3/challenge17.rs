@@ -1,7 +1,7 @@
 extern crate rand;
 extern crate rustc_serialize;
 extern crate openssl;
-use self::openssl::crypto::symm::Mode;
+use self::openssl::symm::Mode;
 use set2::challenge10::cbc_mode;
 
 const BLOCK_LENGTH: usize = 16;

@@ -1,6 +1,6 @@
 extern crate openssl;
 
-use self::openssl::crypto::symm::{Crypter, Type, Mode};
+use self::openssl::symm;
 
 
 const KEY: &'static [u8] = b"YELLOW SUBMARINE";
@@ -33,20 +33,13 @@ impl ToString for Profile {
 }
 
 fn encrypt(plaintext: String) -> Vec<u8> {
-    let crypter = Crypter::new(Type::AES_128_ECB);
-    crypter.init(Mode::Encrypt, KEY, vec![]);
-    crypter.pad(true);
-    let mut ciphertext = crypter.update(plaintext.as_ref());
-    ciphertext.extend(crypter.finalize().into_iter());
-    ciphertext
+    let cipher = symm::Cipher::aes_128_ecb();
+    symm::encrypt(cipher, KEY, None, &plaintext.as_bytes()).unwrap()
 }
 
 fn decrypt(ciphertext: Vec<u8>) -> String {
-    let crypter = Crypter::new(Type::AES_128_ECB);
-    crypter.init(Mode::Decrypt, KEY, vec![]);
-    crypter.pad(true);
-    let mut plaintext = crypter.update(ciphertext.as_ref());
-    plaintext.extend(crypter.finalize().into_iter());
+    let cipher = symm::Cipher::aes_128_ecb();
+    let plaintext = symm::decrypt(cipher, KEY, None, &ciphertext).unwrap();
     String::from_utf8(plaintext).unwrap()
 }
 

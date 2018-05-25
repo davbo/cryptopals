@@ -3,21 +3,17 @@ extern crate openssl;
 
 use set2::challenge10::cbc_mode;
 use set2::challenge9::Paddable;
-use set1::challenge8::score_ciphertext_for_ecb_mode;
 
-use self::openssl::crypto::symm::{Crypter, Type, Mode};
+use self::openssl::symm::{Crypter, Mode, Cipher};
 
 use self::rand::Rng;
-use self::rand::distributions::range::Range;
-use self::rand::distributions::Sample;
 
 pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
     let mut rng = rand::thread_rng();
     let use_cbc_mode: bool = rng.gen();
 
-    let mut prepend_append_range = Range::new(5,10);
-    let count_prepend_bytes = prepend_append_range.sample(&mut rng);
-    let count_append_bytes = prepend_append_range.sample(&mut rng);
+    let count_prepend_bytes = rng.gen_range(5,10);
+    let count_append_bytes = rng.gen_range(5,10);
 
 
     println!("input: {:?} - len {}", input, input.len());
@@ -36,17 +32,18 @@ pub fn encryption_oracle(input: &[u8]) -> Vec<u8> {
         cbc_mode(plaintext, key.as_ref(), key.as_ref(), Mode::Encrypt)
     } else {
         println!("Using ECB mode");
-        let crypter = Crypter::new(Type::AES_128_ECB);
-        crypter.init(Mode::Encrypt, key.as_ref(), vec![]);
+        let mut crypter = Crypter::new(Cipher::aes_128_ecb(), Mode::Encrypt, key.as_ref(), None).unwrap();
         crypter.pad(false);
-        let mut ciphertext = crypter.update(plaintext.as_ref());
-        ciphertext.extend(crypter.finalize().into_iter());
+        let mut ciphertext = vec![0;plaintext.len()+16];
+        crypter.update(plaintext.as_ref(), &mut ciphertext).ok();
+        crypter.finalize(&mut ciphertext).ok();
         ciphertext
     }
 }
 
 #[test]
 fn challenge11() {
+    use set1::challenge8::score_ciphertext_for_ecb_mode;
     let ciphertext = encryption_oracle(b"YELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINE");
     if score_ciphertext_for_ecb_mode(ciphertext) == 1 {
         println!("Detected ECB Mode");

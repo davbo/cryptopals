@@ -6,7 +6,7 @@ use set1::challenge8::score_ciphertext_for_ecb_mode;
 
 use self::rustc_serialize::base64::FromBase64;
 
-use self::openssl::crypto::symm::{Crypter, Type, Mode};
+use self::openssl::symm::{Crypter, Mode, Cipher};
 
 const MESSAGE: &'static str = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
 aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
@@ -21,11 +21,11 @@ pub fn encryption_oracle(prepend_bytes: &[u8]) -> Vec<u8> {
     plaintext.extend(prepend_bytes.iter());
     plaintext.extend(decoded_message.iter());
 
-    let crypter = Crypter::new(Type::AES_128_ECB);
-    crypter.init(Mode::Encrypt, KEY, vec![]);
+    let mut crypter = Crypter::new(Cipher::aes_128_ecb(), Mode::Encrypt, KEY, None).unwrap();
     crypter.pad(true);
-    let mut ciphertext = crypter.update(plaintext.as_ref());
-    ciphertext.extend(crypter.finalize().into_iter());
+    let mut ciphertext = vec![0;plaintext.len() + 16];
+    crypter.update(plaintext.as_ref(), &mut ciphertext).ok();
+    crypter.finalize(&mut ciphertext).ok();
     ciphertext
 }
 

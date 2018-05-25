@@ -8,6 +8,6 @@ name = "matasano"
 
 
 [dependencies]
-rustc-serialize = "0.3.14"
-openssl = "0.6.4"
-rand = "0.3.14"
+rustc-serialize = "0.3.24"
+openssl = "0.10.8"
+rand = "0.5.0"

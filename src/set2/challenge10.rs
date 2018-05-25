@@ -2,32 +2,33 @@ extern crate rustc_serialize;
 extern crate openssl;
 extern crate rand;
 
-use self::openssl::crypto::symm::{Crypter, Type, Mode};
+use self::openssl::symm::{Crypter, Mode, Cipher};
 
 use set1::challenge2::fixed_xor;
 
 
 pub fn cbc_mode(message: Vec<u8>, key: &[u8], iv: &[u8], mode: Mode) -> Vec<u8> {
-    let crypter = Crypter::new(Type::AES_128_ECB);
-    crypter.init(mode, key, vec![]);
+    let mut crypter = Crypter::new(Cipher::aes_128_ecb(), mode, key, None).unwrap();
     crypter.pad(false);
 
     let mut pad = Vec::new();
     pad.extend(iv.iter());
     let mut result : Vec<u8> = Vec::new();
     for chunk in message.chunks(16) {
+        let mut cipheroutput = vec![0;32];
         match mode {
             Mode::Decrypt => {
-                let chunk_dec = fixed_xor(&pad, &crypter.update(chunk));
+                crypter.update(chunk, &mut cipheroutput).ok();
+                let chunk_dec = fixed_xor(&pad, &cipheroutput[0..16]);
                 pad.clear();
                 pad.extend(chunk.iter());
                 result.extend(chunk_dec.iter());
             },
             Mode::Encrypt => {
-                let chunk_enc = crypter.update(&fixed_xor(&pad, &chunk));
+                crypter.update(&fixed_xor(&pad, &chunk), &mut cipheroutput).ok();
                 pad.clear();
-                pad.extend(chunk_enc.iter());
-                result.extend(chunk_enc.iter());
+                pad.extend(cipheroutput[0..16].iter());
+                result.extend(cipheroutput[0..16].iter());
             }
         }
     }

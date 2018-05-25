@@ -4,7 +4,7 @@ extern crate openssl;
 
 #[test]
 fn challenge7() {
-    use self::openssl::crypto::symm::{Crypter, Type, Mode};
+    use self::openssl::symm::{decrypt, Cipher};
     use self::rustc_serialize::base64::FromBase64;
     use std::io::Read;
     use std::fs::File;
@@ -16,10 +16,8 @@ fn challenge7() {
     contents = contents.from_base64().unwrap();
 
     let key = b"YELLOW SUBMARINE";
-    let crypter = Crypter::new(Type::AES_128_ECB);
-    crypter.init(Mode::Decrypt, key, vec![]);
-    crypter.pad(false);
-    let decrypted_data = crypter.update(&contents[..]);
-    let decrypted_string = String::from_utf8(decrypted_data).unwrap();
+    let cipher = Cipher::aes_128_ecb();
+    let plaintext = decrypt(cipher, key, None, &contents).unwrap();
+    let decrypted_string = String::from_utf8(plaintext).unwrap();
     assert!(decrypted_string.contains("Play that funky music"));
 }
