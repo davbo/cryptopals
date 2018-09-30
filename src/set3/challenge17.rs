@@ -35,7 +35,25 @@ fn decrypt_and_check_padding(ciphertext: Vec<u8>, key: &[u8], iv: &[u8]) -> bool
     let decrypted = cbc_mode(ciphertext, key, iv, Mode::Decrypt);
     let final_byte = decrypted[decrypted.len()-1];
     let expected_padding = vec![final_byte; final_byte as usize];
-    decrypted.ends_with(&expected_padding)
+    // Check if padding is empty (e.g. padded byte is 0)
+    !expected_padding.is_empty() && decrypted.ends_with(&expected_padding)
+}
+
+fn test_byte(guess: u8, target_index: usize, attacking_block: Vec<u8>, discovered_bytes: &Vec<u8>, key: &[u8]) -> Result<u8, u8> {
+    let mut guess_block = vec![0;target_index];
+    let expected_padding_byte: u8 = BLOCK_LENGTH as u8 - target_index as u8;
+    guess_block.push(guess);
+    for val in discovered_bytes.iter().rev() {
+        if guess_block.len() == BLOCK_LENGTH {
+            break;
+        }
+        guess_block.push(val ^ expected_padding_byte);
+    }
+    if decrypt_and_check_padding(attacking_block.to_vec(), &key, &guess_block) {
+        Ok(guess ^ expected_padding_byte)
+    } else {
+        Err(guess)
+    }
 }
 
 #[test]
@@ -60,31 +78,30 @@ fn challenge17() {
     let choices = &INPUT_STRINGS;
     let input_string = rng.choose(choices).unwrap().from_base64().unwrap();
     let padded_input = pad(input_string);
-    println!("Input: {:?}", padded_input);
 
     let ciphertext = cbc_mode(padded_input.clone(), &aes_key, &iv, Mode::Encrypt);
     assert!(decrypt_and_check_padding(ciphertext.clone(), &aes_key, &iv));
 
     let mut intermediary: Vec<u8> = vec![];
     for chunk in ciphertext.chunks(BLOCK_LENGTH).rev() {
-        for target_index in (0..16).rev() {
-            let expected_padding_byte: u8 = BLOCK_LENGTH as u8 - target_index as u8;
-            for guess in 0..255 {
-                let mut guess_block = vec![0;target_index];
-                guess_block.push(guess);
-                for val in intermediary.clone().iter().rev() {
-                    if guess_block.len() == 16 {
-                        break;
-                    }
-                    guess_block.push(val ^ expected_padding_byte);
+        for target_index in (0..BLOCK_LENGTH).rev() {
+            let mut options = vec![];
+            for guess in u8::min_value()..u8::max_value() {
+                match test_byte(guess, target_index, chunk.to_vec(), &intermediary, &aes_key) {
+                    Ok(v) => options.push(v),
+                    Err(_) => continue,
                 }
-                if decrypt_and_check_padding(chunk.to_vec(), &aes_key, &guess_block) {
-                    intermediary.push(guess_block[target_index] ^ expected_padding_byte);
-                    break;
-                }
+            }
+            if options.is_empty() {
+                panic!("no value for {}", target_index)
+            } else if options.len() == 1 {
+                intermediary.push(options[0])
+            } else {
+                panic!("More than 1 option with valid padding, entirely possible to happen but not handled here.")
             }
         }
     }
+    println!("Intermediary len: {:?}, Ciphertext len: {:?}", intermediary.len(), ciphertext.len());
     let mut cipher_iter = ciphertext.chunks(BLOCK_LENGTH).rev();
     cipher_iter.next();
     let mut plaintext_blocks: Vec<Vec<u8>> = vec![];
